@@ -234,15 +234,15 @@ export async function registerRoutes(
 
     const { message, skillCode, evaluationSummary, conversationHistory } = parsed.data;
 
+    const isFollowUp = conversationHistory && conversationHistory.length > 0;
+
     const systemPrompt = `You are an expert AI skill evaluation assistant. Your role is to analyze AI agent skills and provide feedback on their safety, quality, security and fitness for purpose.
 
-When the user describes a use case, you must:
-1. Assess if the skill code is fit for the described purpose
-2. Provide short-form feedback (2-3 sentences) about fitness
-3. Provide a detailed analysis report covering performance, safety, and security improvements
-4. Generate a refined version of the code that has been cleaned for safety, optimized for performance, and tuned for the described use case
+${isFollowUp ? `This is a follow-up message in an ongoing conversation. Respond naturally and conversationally to the user's question or request. You may reference prior analysis, answer questions about the code, suggest improvements, or discuss specific concerns.
 
-IMPORTANT: Always respond with valid JSON in this exact format:
+If the user describes a NEW use case or explicitly asks for a fresh analysis, respond with the structured JSON format below. Otherwise, respond with plain text.
+
+When you DO provide structured analysis, use this JSON format:` : `The user is describing their use case for the first time. Assess the skill code and respond with valid JSON in this exact format:`}
 {
   "fit": "Good" | "Moderate" | "Poor",
   "feedback": "Short 2-3 sentence assessment",
@@ -287,10 +287,11 @@ ${evaluationSummary ? `\n--- EVALUATION SUMMARY ---\n${evaluationSummary}\n--- E
         result = JSON.parse(response);
       } catch {
         result = {
-          fit: "Unknown",
-          feedback: response.slice(0, 200),
-          report: response,
+          fit: null,
+          feedback: response,
+          report: null,
           refinedCode: null,
+          isConversational: true,
         };
       }
 

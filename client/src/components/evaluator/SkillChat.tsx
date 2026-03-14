@@ -80,12 +80,13 @@ export default function SkillChat({ evaluation }: SkillChatProps) {
         };
         setMessages(prev => [...prev, errorMsg]);
       } else {
+        const isConversational = data.isConversational || (!data.fit && !data.report && !data.refinedCode);
         const aiResponse: Message = {
           id: (Date.now() + 1).toString(),
           role: "system",
           content: data.feedback || data.message || "Analysis complete.",
-          type: "analysis",
-          data: {
+          type: isConversational ? "text" : "analysis",
+          data: isConversational ? undefined : {
             fit: data.fit || "Unknown",
             feedback: data.feedback || "",
             report: data.report || "",
@@ -93,7 +94,10 @@ export default function SkillChat({ evaluation }: SkillChatProps) {
           }
         };
         setMessages(prev => [...prev, aiResponse]);
-        setConversationHistory([...newHistory, { role: "assistant" as const, content: JSON.stringify(data) }]);
+        const assistantContent = isConversational
+          ? (data.feedback || data.message || "")
+          : JSON.stringify(data);
+        setConversationHistory([...newHistory, { role: "assistant" as const, content: assistantContent }]);
       }
     } catch (err: any) {
       const errorMsg: Message = {
