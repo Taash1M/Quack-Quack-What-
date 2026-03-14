@@ -1,0 +1,52 @@
+%%{init: {'theme': 'dark', 'themeVariables': {'primaryColor': '#6366f1', 'primaryTextColor': '#e2e8f0', 'primaryBorderColor': '#818cf8', 'lineColor': '#94a3b8', 'secondaryColor': '#1e293b', 'tertiaryColor': '#0f172a', 'background': '#020617'}}}%%
+
+sequenceDiagram
+    participant U as User
+    participant FE as Frontend
+    participant API as Express Server
+    participant PP as Passport.js
+    participant OIDC as Replit OIDC Provider
+    participant DB as PostgreSQL
+
+    Note over U,DB: Login Flow
+
+    U->>FE: Click "Sign In"
+    FE->>API: GET /api/login
+    API->>PP: passport.authenticate("replitauth")
+    PP->>OIDC: Redirect to authorization endpoint
+    OIDC->>U: Show login page (Google/GitHub/Apple/Email)
+    U->>OIDC: Enter credentials
+    OIDC->>API: Redirect to /api/callback with auth code
+    API->>PP: passport.authenticate("replitauth")
+    PP->>OIDC: Exchange code for tokens
+    OIDC-->>PP: {access_token, refresh_token, id_token}
+    PP->>PP: Extract user claims from tokens
+    PP->>DB: UPSERT user record
+    DB-->>PP: User record
+    PP->>DB: CREATE session
+    DB-->>PP: Session ID
+    PP-->>API: Set session cookie
+    API->>FE: Redirect to / (302)
+    FE->>API: GET /api/auth/user
+    API-->>FE: User profile JSON
+    FE->>U: Show authenticated dashboard
+
+    Note over U,DB: Token Refresh Flow
+
+    FE->>API: GET /api/auth/user (expired token)
+    API->>PP: isAuthenticated middleware
+    PP->>PP: Check token expiry
+    PP->>OIDC: refreshTokenGrant(refresh_token)
+    OIDC-->>PP: New tokens
+    PP->>PP: Update session with new tokens
+    PP-->>API: next()
+    API-->>FE: User profile JSON
+
+    Note over U,DB: Logout Flow
+
+    U->>FE: Click "Logout"
+    FE->>API: GET /api/logout
+    API->>PP: req.logout()
+    PP->>DB: DELETE session
+    API->>OIDC: buildEndSessionUrl
+    OIDC-->>U: Redirect to home page

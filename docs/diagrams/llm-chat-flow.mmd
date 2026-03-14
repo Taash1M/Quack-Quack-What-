@@ -1,0 +1,50 @@
+%%{init: {'theme': 'dark', 'themeVariables': {'primaryColor': '#6366f1', 'primaryTextColor': '#e2e8f0', 'primaryBorderColor': '#818cf8', 'lineColor': '#94a3b8', 'secondaryColor': '#1e293b', 'tertiaryColor': '#0f172a', 'background': '#020617'}}}%%
+
+sequenceDiagram
+    participant U as User
+    participant FE as SkillChat Component
+    participant API as Express Server
+    participant DB as PostgreSQL
+    participant LLM as LLM Provider API
+
+    U->>FE: Enter use-case description
+    FE->>API: POST /api/chat
+    Note right of FE: Body: {message, skillCode, evaluationSummary, conversationHistory}
+
+    API->>DB: SELECT FROM provider_configs
+    DB-->>API: Provider config (provider, apiKey, model)
+
+    alt No Provider Configured
+        API-->>FE: 400 {message: "No AI provider configured", needsConfig: true}
+        FE->>U: Show "Configure AI Provider" prompt
+    end
+
+    API->>API: Build system prompt
+    Note over API: System prompt bundles:<br/>1. Role definition<br/>2. JSON response format<br/>3. Skill code<br/>4. Evaluation summary<br/>5. Conversation history
+
+    alt OpenAI
+        API->>LLM: POST api.openai.com/v1/chat/completions
+    else Anthropic
+        API->>LLM: POST api.anthropic.com/v1/messages
+    else AI Foundry
+        API->>LLM: POST {targetUri}/chat/completions
+    else GCP Vertex AI
+        API->>LLM: POST {region}-aiplatform.googleapis.com/v1/...
+    else AWS Bedrock
+        API->>LLM: POST bedrock-runtime.{region}.amazonaws.com/...
+    end
+
+    LLM-->>API: LLM response text
+
+    API->>API: Parse JSON from response
+    Note over API: Expected: {fit, feedback, report, refinedCode}
+
+    alt Valid JSON
+        API-->>FE: {fit, feedback, report, refinedCode}
+    else Invalid JSON
+        API->>API: Fallback: wrap raw text
+        API-->>FE: {fit: "Unknown", feedback: raw text, report: raw text}
+    end
+
+    FE->>FE: Render structured response
+    FE->>U: Display fitness badge, feedback, report, refined code

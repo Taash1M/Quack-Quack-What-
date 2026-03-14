@@ -1,0 +1,59 @@
+%%{init: {'theme': 'dark', 'themeVariables': {'primaryColor': '#6366f1', 'primaryTextColor': '#e2e8f0', 'primaryBorderColor': '#818cf8', 'lineColor': '#94a3b8', 'secondaryColor': '#1e293b', 'tertiaryColor': '#0f172a', 'background': '#020617'}}}%%
+
+flowchart TB
+    subgraph External["External Services"]
+        GH[("GitHub API")]
+        OIDC[("Replit OIDC")]
+        LLM_API[("LLM Providers<br/>OpenAI / Anthropic / Foundry<br/>Vertex AI / Bedrock")]
+    end
+
+    subgraph Client["Frontend (React 19)"]
+        direction TB
+        Landing["Landing Page<br/>(Guest welcome)"]
+        Home["Home Dashboard<br/>(SkillImporter + AnalysisSim<br/>+ EvaluationReport + SkillChat)"]
+        History["History Page<br/>(Past evaluations)"]
+        Docs["Documentation<br/>(12-section suite)"]
+        Settings["Settings Modal<br/>(AI provider config)"]
+    end
+
+    subgraph Server["Backend (Express 5)"]
+        direction TB
+        Auth["Auth Module<br/>(Passport + OIDC)"]
+        Routes["API Routes<br/>(/api/*)"]
+        Analyzer["Static Analyzer<br/>(Pattern + Heuristics)"]
+        LLM_Proxy["LLM Proxy<br/>(Multi-provider adapter)"]
+        Storage["Storage Layer<br/>(Drizzle ORM)"]
+    end
+
+    subgraph Data["PostgreSQL"]
+        Users[("users")]
+        Sessions[("sessions")]
+        Evaluations[("evaluations")]
+        Configs[("provider_configs")]
+    end
+
+    Client -->|"HTTP/JSON"| Server
+    Auth <-->|"OIDC Flow"| OIDC
+    Routes -->|"Fetch code"| GH
+    LLM_Proxy -->|"Chat requests"| LLM_API
+    Storage --> Data
+
+    Home --> Routes
+    History --> Routes
+    Settings --> Routes
+    Landing -->|"Sign In"| Auth
+
+    Routes --> Analyzer
+    Routes --> LLM_Proxy
+    Routes --> Storage
+    Auth --> Storage
+
+    classDef external fill:#1e293b,stroke:#818cf8,color:#e2e8f0
+    classDef client fill:#0f172a,stroke:#6366f1,color:#e2e8f0
+    classDef server fill:#0f172a,stroke:#34d399,color:#e2e8f0
+    classDef data fill:#1e293b,stroke:#fbbf24,color:#e2e8f0
+
+    class GH,OIDC,LLM_API external
+    class Landing,Home,History,Docs,Settings client
+    class Auth,Routes,Analyzer,LLM_Proxy,Storage server
+    class Users,Sessions,Evaluations,Configs data

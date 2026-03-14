@@ -1,0 +1,45 @@
+%%{init: {'theme': 'dark', 'themeVariables': {'primaryColor': '#6366f1', 'primaryTextColor': '#e2e8f0', 'primaryBorderColor': '#818cf8', 'lineColor': '#94a3b8', 'secondaryColor': '#1e293b', 'tertiaryColor': '#0f172a', 'background': '#020617'}}}%%
+
+sequenceDiagram
+    participant U as User (Browser)
+    participant FE as Frontend (React)
+    participant API as Backend (Express)
+    participant AN as Analyzer Engine
+    participant DB as PostgreSQL
+    participant GH as GitHub API
+
+    U->>FE: Select source type & input
+    
+    alt GitHub Source
+        FE->>API: POST /api/fetch-skill {source, sourceType: "github"}
+        API->>GH: GET /repos/{owner}/{repo}/git/trees
+        GH-->>API: Repository tree
+        API->>GH: GET /repos/{owner}/{repo}/contents/{path}
+        GH-->>API: Raw file contents
+        API-->>FE: {code: "..."}
+    else URL Source
+        FE->>API: POST /api/fetch-skill {source, sourceType: "url"}
+        API->>API: fetch(source URL)
+        API-->>FE: {code: "..."}
+    else Paste/Local
+        Note over FE: Code already available client-side
+    end
+
+    FE->>FE: Show AnalysisSim animation
+    FE->>API: POST /api/evaluate {source, sourceType, code}
+    API->>AN: analyzeCode(code)
+    
+    Note over AN: Pattern Matching Phase
+    AN->>AN: Check dangerous patterns (eval, exec, __proto__)
+    AN->>AN: Check secret patterns (API keys, tokens)
+    AN->>AN: Check quality patterns (empty catch, console.log)
+    AN->>AN: Run heuristic checks (length, comments, types)
+    AN->>AN: Calculate scores (Safety 40%, Security 30%, Quality 30%)
+    AN-->>API: {scores, findings, summary}
+
+    API->>DB: INSERT INTO evaluations
+    DB-->>API: Evaluation record
+    API-->>FE: Evaluation JSON response
+
+    FE->>FE: Transition to EvaluationReport
+    FE->>U: Display scores, findings, download option

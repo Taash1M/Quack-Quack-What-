@@ -1,0 +1,51 @@
+%%{init: {'theme': 'dark', 'themeVariables': {'primaryColor': '#6366f1', 'primaryTextColor': '#e2e8f0', 'primaryBorderColor': '#818cf8', 'lineColor': '#94a3b8', 'secondaryColor': '#1e293b', 'tertiaryColor': '#0f172a', 'background': '#020617'}}}%%
+
+erDiagram
+    USERS {
+        varchar id PK "gen_random_uuid()"
+        varchar email UK "nullable"
+        varchar first_name "nullable"
+        varchar last_name "nullable"
+        varchar profile_image_url "nullable"
+        timestamp created_at "DEFAULT now()"
+        timestamp updated_at "DEFAULT now()"
+    }
+
+    SESSIONS {
+        varchar sid PK
+        jsonb sess "NOT NULL"
+        timestamp expire "NOT NULL, INDEXED"
+    }
+
+    EVALUATIONS {
+        varchar id PK "gen_random_uuid()"
+        varchar user_id FK "nullable (guest)"
+        text source "NOT NULL"
+        text source_type "NOT NULL"
+        text skill_code "nullable"
+        integer safety_score "NOT NULL (0-100)"
+        integer quality_score "NOT NULL (0-100)"
+        integer security_score "NOT NULL (0-100)"
+        integer overall_score "NOT NULL (0-100)"
+        text summary "NOT NULL"
+        json safety_findings "NOT NULL"
+        json quality_findings "NOT NULL"
+        json security_findings "NOT NULL"
+        timestamp created_at "DEFAULT now()"
+    }
+
+    PROVIDER_CONFIGS {
+        varchar id PK "gen_random_uuid()"
+        text provider "NOT NULL"
+        text api_key "nullable"
+        text model "nullable"
+        text target_uri "nullable"
+        text region "nullable"
+        text project_id "nullable"
+        text location "nullable"
+        text access_key_id "nullable"
+        text secret_access_key "nullable"
+    }
+
+    USERS ||--o{ EVALUATIONS : "has many"
+    USERS ||--o{ SESSIONS : "has many"

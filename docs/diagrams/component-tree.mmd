@@ -1,0 +1,71 @@
+%%{init: {'theme': 'dark', 'themeVariables': {'primaryColor': '#6366f1', 'primaryTextColor': '#e2e8f0', 'primaryBorderColor': '#818cf8', 'lineColor': '#94a3b8', 'secondaryColor': '#1e293b', 'tertiaryColor': '#0f172a', 'background': '#020617'}}}%%
+
+graph TD
+    App["App.tsx<br/>(QueryClientProvider + TooltipProvider)"]
+    Router["Router<br/>(wouter Switch)"]
+    Trademark["Trademark Badge<br/>(fixed bottom-right)"]
+    Toaster["Toaster<br/>(notifications)"]
+
+    App --> Router
+    App --> Trademark
+    App --> Toaster
+
+    Landing["Landing Page"]
+    Home["Home Page"]
+    History["History Page"]
+    Readme["Readme Page"]
+    NotFound["404 Page"]
+
+    Router --> Landing
+    Router --> Home
+    Router --> History
+    Router --> Readme
+    Router --> NotFound
+
+    subgraph HomeComponents["Home Page Components"]
+        GuestBanner["Guest Mode Banner<br/>(shown if !user)"]
+        NavBar["Nav Bar<br/>(Docs, History, Settings, Profile)"]
+        Header["Header<br/>(Title + Tagline)"]
+        SI["SkillImporter<br/>(4 tabs: GitHub/URL/Local/Paste)"]
+        AS["AnalysisSim<br/>(animated scan phases)"]
+        ER["EvaluationReport<br/>(scores + findings)"]
+        SC["SkillChat<br/>(LLM chat interface)"]
+        SM["SettingsModal<br/>(AI provider config)"]
+        FC["FeatureCards<br/>(Safety/Quality/Security)"]
+    end
+
+    Home --> GuestBanner
+    Home --> NavBar
+    Home --> Header
+    Home --> SI
+    Home --> AS
+    Home --> ER
+    ER --> SC
+    NavBar --> SM
+    Home --> FC
+
+    subgraph HistoryComponents["History Page Components"]
+        HHeader["History Header"]
+        HList["Evaluation List"]
+        HCard["Evaluation Card<br/>(source, scores, date)"]
+    end
+
+    History --> HHeader
+    History --> HList
+    HList --> HCard
+
+    subgraph ReadmeComponents["Readme Page Components"]
+        RHeader["Docs Header"]
+        RSections["12 Documentation Sections"]
+    end
+
+    Readme --> RHeader
+    Readme --> RSections
+
+    classDef page fill:#1e293b,stroke:#6366f1,color:#e2e8f0
+    classDef component fill:#0f172a,stroke:#34d399,color:#e2e8f0
+    classDef root fill:#1e293b,stroke:#fbbf24,color:#e2e8f0
+
+    class App,Router root
+    class Landing,Home,History,Readme,NotFound page
+    class GuestBanner,NavBar,Header,SI,AS,ER,SC,SM,FC,HHeader,HList,HCard,RHeader,RSections component

@@ -1,0 +1,78 @@
+%%{init: {'theme': 'dark', 'themeVariables': {'primaryColor': '#6366f1', 'primaryTextColor': '#e2e8f0', 'primaryBorderColor': '#818cf8', 'lineColor': '#94a3b8', 'secondaryColor': '#1e293b', 'tertiaryColor': '#0f172a', 'background': '#020617'}}}%%
+
+flowchart TD
+    Input["Input: Raw Skill Code"]
+
+    subgraph SafetyAnalysis["Safety Analysis (40% Weight)"]
+        S1["Check eval() / Function()"]
+        S2["Check exec / spawn / child_process"]
+        S3["Check __proto__ / prototype pollution"]
+        S4["Check process.env / fs access"]
+        S5["Check network requests (fetch/http)"]
+        S6["Check dynamic imports"]
+        SS["Safety Score = 100 - Σ penalties"]
+    end
+
+    subgraph SecurityAnalysis["Security Analysis (30% Weight)"]
+        K1["Check API keys (sk-, AKIA)"]
+        K2["Check hardcoded tokens"]
+        K3["Check passwords in code"]
+        K4["Check connection strings"]
+        K5["Check private keys"]
+        KS["Security Score = 100 - Σ penalties"]
+    end
+
+    subgraph QualityAnalysis["Quality Analysis (30% Weight)"]
+        Q1["Check empty catch blocks"]
+        Q2["Check console.log statements"]
+        Q3["Check TODO/FIXME markers"]
+        Q4["Check missing type annotations"]
+        Q5["Check error handling presence"]
+        Q6["Check comment density"]
+        QS["Quality Score = 100 - Σ penalties + bonuses"]
+    end
+
+    Input --> SafetyAnalysis
+    Input --> SecurityAnalysis
+    Input --> QualityAnalysis
+
+    S1 --> SS
+    S2 --> SS
+    S3 --> SS
+    S4 --> SS
+    S5 --> SS
+    S6 --> SS
+
+    K1 --> KS
+    K2 --> KS
+    K3 --> KS
+    K4 --> KS
+    K5 --> KS
+
+    Q1 --> QS
+    Q2 --> QS
+    Q3 --> QS
+    Q4 --> QS
+    Q5 --> QS
+    Q6 --> QS
+
+    SS --> Overall
+    KS --> Overall
+    QS --> Overall
+
+    Overall["Overall Score<br/>= Safety×0.4 + Security×0.3 + Quality×0.3"]
+    Overall --> Classification
+
+    Classification{"Score >= 80?"}
+    Classification -->|Yes| Pass["✅ PASSED"]
+    Classification -->|No| Review["⚠️ REVIEW"]
+
+    classDef safety fill:#0f172a,stroke:#34d399,color:#34d399
+    classDef security fill:#0f172a,stroke:#c084fc,color:#c084fc
+    classDef quality fill:#0f172a,stroke:#60a5fa,color:#60a5fa
+    classDef result fill:#1e293b,stroke:#fbbf24,color:#fbbf24
+
+    class S1,S2,S3,S4,S5,S6,SS safety
+    class K1,K2,K3,K4,K5,KS security
+    class Q1,Q2,Q3,Q4,Q5,Q6,QS quality
+    class Overall,Classification,Pass,Review result
